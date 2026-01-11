@@ -12,6 +12,13 @@ You must set an ngrok auth token, or the server will not work.
 
 🔗 https://colab.research.google.com/drive/1PyLCIKYX7X_ef30yJepgDOajhepb2360?authuser=1#scrollTo=HnisTGHip9n7
 
+1. Open the link above
+2. Sign in with your Google account
+3. If prompted, grant permissions to access ngrok
+4. Run the cells shown in the notebook
+5. Copy your ngrok auth token
+6. Paste it into the settings icon and test for connection!!
+
 🧠 What This Backend Does
 🎙️ Accepts audio recordings via REST API
 📊 Extracts ML-based speech features (MFCCs, pacing, pauses)
@@ -40,12 +47,7 @@ archive.zip
     ├── ...
 Steps:
 
-Open the link above
-Sign in with your Google account
-If prompted, grant permissions to access ngrok
-Run the cells shown in the notebook
-Copy your ngrok auth token
-Paste it into the settings icon and test for connection!!
+
 
 
 ⚠️ If you see a permissions popup — allow it. That’s normal.
