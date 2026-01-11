@@ -16,7 +16,8 @@ import {
   Activity,
   Cpu,
   ShieldCheck,
-  Volume2
+  Volume2,
+  Clock
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -54,7 +55,7 @@ const AIInterviewer = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Hello! I am your AI Interviewer. I've analyzed your previous sessions and I'm ready to help you master your communication. What would you like to practice today?",
+      text: "Hello! I am your AI Interviewer. I've been configured to help you practice for high-stakes interviews. I'll be evaluating your tone, confidence, and content. Shall we begin? \n\nLet's start with a classic: Tell me about yourself and your background.",
       sender: "ai",
       timestamp: new Date()
     }
@@ -62,6 +63,16 @@ const AIInterviewer = () => {
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isRecordingOpen, setIsRecordingOpen] = useState(false);
+  const [interviewStep, setInterviewStep] = useState(0);
+
+  const interviewQuestions = [
+    "That's interesting. What would you say is your greatest professional strength?",
+    "I see. And on the flip side, what do you consider to be your greatest weakness, and how are you working to improve it?",
+    "Tell me about a time you faced a significant challenge at work or in a project. How did you handle it?",
+    "Why do you want to work for this company specifically? What draws you to our mission?",
+    "Where do you see yourself professionally in five years?",
+    "Finally, do you have any questions for me about the role or the company culture?"
+  ];
   const [behavior, setBehavior] = useState({
     tone: "Professional",
     difficulty: "Medium",
@@ -115,9 +126,16 @@ const AIInterviewer = () => {
 
     // Simulate AI response
     setTimeout(() => {
+      // Get next question
+      const nextQuestion = interviewStep < interviewQuestions.length 
+        ? interviewQuestions[interviewStep]
+        : "That concludes our interview session today. You've provided some solid insights. Do you have any final thoughts or would you like to review any specific part?";
+      
+      setInterviewStep(prev => prev + 1);
+
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: "That sounds like a great plan. Based on your history, you tend to speak a bit fast when nervous. Let's focus on maintaining a steady pace during this session.",
+        text: `I've noted your response. ${nextQuestion}`,
         sender: "ai",
         timestamp: new Date()
       };
@@ -126,26 +144,54 @@ const AIInterviewer = () => {
     }, 1500);
   };
 
+  const [lastAnalysis, setLastAnalysis] = useState<AnalysisResult | null>(null);
+  const [lastEvaluationTime, setLastEvaluationTime] = useState<string | null>(null);
+
   const handleAudioResult = (result: AnalysisResult) => {
     setIsRecordingOpen(false);
+    setLastAnalysis(result);
+    setLastEvaluationTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     
-    // Add user's transcription (or a placeholder if transcription isn't in result)
+    // Add user's transcription
     const userMsg: Message = {
       id: Date.now().toString(),
-      text: "🎤 [Voice Message Sent] " + (result.detected_emotion ? `(Emotion: ${result.detected_emotion})` : ""),
+      text: result.transcription 
+        ? `🎤 ${result.transcription}` 
+        : `🎤 [Voice Message Sent]`,
       sender: "user",
       timestamp: new Date()
     };
     setMessages(prev => [...prev, userMsg]);
 
-    // Add realtime memory from analysis
-    addRealtimeMemory(`Detected ${result.detected_emotion} emotion with ${result.confidence_score}% confidence.`);
+    // Add realtime memory based on analysis metrics
+    addRealtimeMemory(`Analyzed speech: ${result.confidence_score}% confidence with ${result.detected_emotion} tone.`);
 
     setIsTyping(true);
+    
+    // Construct a more structured and accurate AI response
     setTimeout(() => {
+      const isMismatched = result.detected_emotion.toLowerCase() !== behavior.tone.toLowerCase();
+      const feedbackText = result.feedback && result.feedback.length > 0 
+        ? result.feedback[0] 
+        : "I've analyzed your delivery.";
+
+      let introMessage = "";
+      if (isMismatched) {
+        introMessage = `I've processed your response. While you're aiming for a ${behavior.tone} delivery, I actually detected a ${result.detected_emotion} tone.`;
+      } else {
+        introMessage = `I've processed your response. Your ${behavior.tone} delivery was well-executed.`;
+      }
+
+      // Get next question
+      const nextQuestion = interviewStep < interviewQuestions.length 
+        ? interviewQuestions[interviewStep]
+        : "That concludes our interview session today. You've provided some solid insights. Do you have any final thoughts or would you like to review any specific part?";
+      
+      setInterviewStep(prev => prev + 1);
+
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: `I've analyzed your voice response. Your ${result.detected_emotion} tone was quite evident. Here's a tip: ${result.feedback && result.feedback[0] ? result.feedback[0] : "Try to vary your pitch more to keep the interviewer engaged."}`,
+        text: `${introMessage} ${feedbackText}\n\n${nextQuestion}`,
         sender: "ai",
         timestamp: new Date()
       };
@@ -155,7 +201,7 @@ const AIInterviewer = () => {
 
     toast({
       title: "Analysis Complete",
-      description: `Confidence Score: ${result.confidence_score}%`,
+      description: `Grade: ${result.grade || 'A'} • Confidence: ${result.confidence_score}%`,
     });
   };
 
@@ -253,8 +299,39 @@ const AIInterviewer = () => {
                       </select>
                     </div>
 
-                    <Button className="w-full retro-button bg-primary text-primary-foreground mt-4 text-xs py-5">
-                      Update Behavior
+                    <Button 
+                      onClick={() => {
+                        toast({
+                          title: "Behavior Updated",
+                          description: `Bot is now ${behavior.tone} and ${behavior.personality}.`,
+                        });
+                      }}
+                      className="w-full retro-button bg-primary text-primary-foreground mt-4 text-xs py-5"
+                    >
+                      Update AI Behavior
+                    </Button>
+
+                    <Button 
+                      onClick={() => {
+                        setMessages([
+                          {
+                            id: Date.now().toString(),
+                            text: "Interview reset. Let's start over.\n\nTell me about yourself and your background.",
+                            sender: "ai",
+                            timestamp: new Date()
+                          }
+                        ]);
+                        setInterviewStep(0);
+                        setLastAnalysis(null);
+                        toast({
+                          title: "Interview Reset",
+                          description: "The conversation has been cleared.",
+                        });
+                      }}
+                      variant="outline"
+                      className="w-full retro-button bg-card mt-2 text-[10px] py-4 border-2"
+                    >
+                      Reset Session
                     </Button>
                   </div>
                 </div>
@@ -358,7 +435,7 @@ const AIInterviewer = () => {
                            <div className="py-12 flex flex-col items-center">
                              <h3 className="font-heading text-xl mb-8 text-center">VOICE INTERVIEW</h3>
                              <AudioRecorder 
-                               context={inputText || "General Interview"} 
+                               context={`AI Interviewer | Tone: ${behavior.tone} | Difficulty: ${behavior.difficulty} | Personality: ${behavior.personality}${inputText ? ` | Topic: ${inputText}` : ""}`} 
                                onResult={handleAudioResult} 
                              />
                              <p className="mt-8 text-xs text-muted-foreground text-center max-w-xs">
@@ -372,46 +449,117 @@ const AIInterviewer = () => {
                 </div>
               </div>
 
-              {/* Right Column: AI Memory */}
+              {/* Right Column: AI Analysis & Metrics */}
               <div className="lg:col-span-3 space-y-6 order-3">
-                <div className="retro-card p-5 bg-card border-2 border-yellow-500/30 sticky top-24">
-                  <div className="flex items-center justify-between mb-6">
+                <div className="retro-card p-5 bg-card border-2 border-primary/30 sticky top-24">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Brain className="w-5 h-5 text-yellow-500" />
-                      <h2 className="font-bold text-lg">AI Memory</h2>
+                      <Activity className="w-5 h-5 text-primary" />
+                      <h2 className="font-bold text-lg uppercase tracking-wider">Live Metrics</h2>
                     </div>
-                    <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" />
+                    <div className={`text-xl font-black ${
+                      lastAnalysis?.grade === 'S' ? 'text-secondary' : 
+                      lastAnalysis?.grade === 'A' ? 'text-success' : 
+                      'text-primary'
+                    }`}>
+                      {lastAnalysis?.grade || '—'}
+                    </div>
                   </div>
+                  {lastAnalysis && lastEvaluationTime && (
+                     <div className="flex items-center gap-1 mb-6 text-[9px] text-muted-foreground uppercase font-mono">
+                       <Clock className="w-3 h-3" />
+                       Last Evaluation: {lastEvaluationTime}
+                     </div>
+                   )}
 
-                  <div className="space-y-4">
-                    {memories.map(m => (
-                      <div key={m.id} className="p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500/40" />
-                        <p className="text-xs text-foreground leading-relaxed mb-2">"{m.text}"</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground uppercase">{m.date}</span>
-                          <History className="w-3 h-3 text-yellow-500/50" />
+                  {lastAnalysis ? (
+                    <div className="space-y-5">
+                      {/* Emotion & Tone */}
+                      <div className="p-3 bg-muted/50 border-2 border-border rounded-xl">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] font-bold uppercase text-muted-foreground">Detected Tone</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                            lastAnalysis.detected_emotion.toLowerCase() === behavior.tone.toLowerCase()
+                              ? "bg-success/20 text-success"
+                              : "bg-destructive/20 text-destructive"
+                          }`}>
+                            {lastAnalysis.detected_emotion.toLowerCase() === "disgust" || lastAnalysis.detected_emotion.toLowerCase() === "angry" 
+                              ? `INAPPROPRIATE (${lastAnalysis.detected_emotion})` 
+                              : lastAnalysis.detected_emotion}
+                          </span>
+                        </div>
+                        <p className={`text-xs font-medium leading-relaxed italic ${
+                          lastAnalysis.detected_emotion.toLowerCase() === behavior.tone.toLowerCase()
+                            ? "text-success"
+                            : "text-destructive"
+                        }`}>
+                          "{lastAnalysis.detected_emotion.toLowerCase() === behavior.tone.toLowerCase() 
+                            ? `Perfect match with ${behavior.tone} goal.` 
+                            : `Significant mismatch with ${behavior.tone} goal.`}"
+                        </p>
+                      </div>
+
+                      {/* Performance Metrics */}
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] font-bold uppercase">
+                            <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-yellow-500" /> Confidence</span>
+                            <span className="text-primary">{lastAnalysis.confidence_score.includes('%') ? lastAnalysis.confidence_score : `${lastAnalysis.confidence_score}%`}</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border/50">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: lastAnalysis.confidence_score.includes('%') ? lastAnalysis.confidence_score : `${lastAnalysis.confidence_score}%` }}
+                              className="h-full bg-primary"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] font-bold uppercase">
+                            <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-secondary" /> Pause Ratio</span>
+                            <span className="text-secondary">{lastAnalysis.pause_ratio || '0%'}</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border/50">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: lastAnalysis.pause_ratio || '0%' }}
+                              className="h-full bg-secondary"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[10px] font-bold uppercase">
+                            <span className="flex items-center gap-1"><Brain className="w-3 h-3 text-accent" /> Engagement</span>
+                            <span className="text-accent">{lastAnalysis.metrics?.engagement || 75}%</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border/50">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${lastAnalysis.metrics?.engagement || 75}%` }}
+                              className="h-full bg-accent"
+                            />
+                          </div>
                         </div>
                       </div>
-                    ))}
-                    
-                    <div className="pt-4 border-t border-border">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Activity className="w-4 h-4 text-primary" />
-                        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Learning Progress</span>
+
+                      {/* Suggested Response (Shortened) */}
+                      <div className="pt-4 border-t-2 border-border/50">
+                        <label className="text-[10px] font-bold uppercase text-muted-foreground block mb-2">Key Improvement</label>
+                        <p className="text-[11px] text-foreground leading-relaxed">
+                          {lastAnalysis.feedback[1] || lastAnalysis.feedback[0]}
+                        </p>
                       </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          animate={{ width: "65%" }}
-                          className="h-full bg-gradient-to-r from-yellow-400 to-orange-500"
-                        />
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-2 italic text-center">
-                        AI has learned 65% of your patterns
-                      </p>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="py-12 text-center space-y-4 opacity-50">
+                      <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto">
+                        <Cpu className="w-6 h-6" />
+                      </div>
+                      <p className="text-[11px] uppercase font-bold tracking-widest">Awaiting Input...</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

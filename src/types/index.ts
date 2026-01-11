@@ -4,6 +4,7 @@ export interface AnalysisResult {
   pause_ratio?: string;
   feedback: string[];
   grade?: string;
+  transcription?: string;
   technical_stats?: {
     raw_pause_ratio: string;
     local_model_guess: string;

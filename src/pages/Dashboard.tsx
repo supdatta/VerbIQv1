@@ -24,7 +24,18 @@ const Dashboard = () => {
     }
   }, [location.state]);
 
-  const getGradeColor = (score: string) => {
+  const getGradeColor = (score: string, grade?: string) => {
+    if (grade) {
+      const colors: Record<string, string> = {
+        S: "text-secondary",
+        A: "text-success",
+        B: "text-primary",
+        C: "text-accent",
+        D: "text-chart-5",
+        F: "text-destructive",
+      };
+      return colors[grade] || "text-foreground";
+    }
     const numScore = parseInt(score);
     if (numScore >= 80) return "text-success";
     if (numScore >= 60) return "text-primary";
@@ -221,9 +232,9 @@ const Dashboard = () => {
                                   <p className="font-medium text-foreground">{item.result.detected_emotion}</p>
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-xs text-muted-foreground uppercase mb-1">Score</p>
-                                  <p className={`font-bold text-xl ${getGradeColor(item.result.confidence_score)}`}>
-                                    {item.result.confidence_score}
+                                  <p className="text-xs text-muted-foreground uppercase mb-1">{item.result.grade ? "Grade" : "Score"}</p>
+                                  <p className={`font-bold text-xl ${getGradeColor(item.result.confidence_score, item.result.grade)}`}>
+                                    {item.result.grade || item.result.confidence_score}
                                   </p>
                                 </div>
                                 <div className="flex items-center gap-2 text-muted-foreground">

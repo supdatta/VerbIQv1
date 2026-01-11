@@ -270,27 +270,12 @@ const ResultsCard = ({ result, onClose }: ResultsCardProps) => {
           <Button 
             onClick={() => {
               onClose();
-              if (isPracticePage) {
-                // If on practice page, just closing is enough to stay there, 
-                // but we can also explicitly navigate to dashboard if they really want to see history
-                navigate("/dashboard", { state: { tab: "progress" } });
-              } else {
-                navigate("/dashboard", { state: { tab: "progress" } });
-              }
+              navigate("/dashboard", { state: { tab: "progress" } });
             }}
             className="retro-button bg-card text-foreground"
           >
-            {isPracticePage ? (
-              <>
-                <History className="w-5 h-5 mr-2" />
-                VIEW HISTORY
-              </>
-            ) : (
-              <>
-                <Gamepad2 className="w-5 h-5 mr-2" />
-                VIEW HISTORY
-              </>
-            )}
+            <History className="w-5 h-5 mr-2" />
+            VIEW HISTORY
           </Button>
           <Button 
             onClick={onClose} 

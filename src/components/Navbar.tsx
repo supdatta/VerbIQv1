@@ -16,6 +16,113 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
+interface ApiSettingsProps {
+  apiUrl: string;
+  setApiUrl: (url: string) => void;
+  isTesting: boolean;
+  testStatus: 'idle' | 'success' | 'error';
+  testConnection: () => Promise<void>;
+  saveApiUrl: () => void;
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  trigger?: React.ReactNode;
+}
+
+const ApiSettingsDialog = ({ 
+  apiUrl, 
+  setApiUrl, 
+  isTesting, 
+  testStatus, 
+  testConnection, 
+  saveApiUrl, 
+  isOpen, 
+  setIsOpen,
+  trigger
+}: ApiSettingsProps) => (
+  <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+    <DialogContent className="sm:max-w-[425px] retro-card border-2 border-border bg-card p-0 overflow-hidden">
+      <div className="bg-primary/10 px-6 py-4 border-b-2 border-border flex items-center gap-3">
+        <Globe className="w-5 h-5 text-primary" />
+        <DialogTitle className="font-heading text-lg">Network Settings</DialogTitle>
+      </div>
+      
+      <div className="p-6 space-y-6">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Backend Endpoint
+            </label>
+            {testStatus === 'success' && (
+              <span className="text-[10px] font-bold text-success flex items-center gap-1 bg-success/10 px-2 py-0.5 rounded-full">
+                <Check className="w-3 h-3" /> ONLINE
+              </span>
+            )}
+            {testStatus === 'error' && (
+              <span className="text-[10px] font-bold text-destructive flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full">
+                <AlertCircle className="w-3 h-3" /> OFFLINE
+              </span>
+            )}
+          </div>
+          
+          <div className="relative group">
+            <Input 
+              value={apiUrl} 
+              onChange={(e) => setApiUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
+                  e.stopPropagation();
+                }
+              }}
+              placeholder="https://xxxx.ngrok-free.app"
+              className="retro-input pr-10 h-12 font-mono text-sm"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+              <Globe className="w-4 h-4" />
+            </div>
+          </div>
+          
+          <p className="text-xs text-muted-foreground leading-relaxed italic">
+            Connect to your local AI engine or ngrok tunnel. Do not include <code className="bg-muted px-1 rounded">/analyze</code> at the end.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <Button 
+            onClick={testConnection} 
+            disabled={isTesting}
+            variant="outline"
+            className={`h-11 retro-button border-2 transition-all ${
+              testStatus === 'success' ? 'border-success/50 text-success' : 
+              testStatus === 'error' ? 'border-destructive/50 text-destructive' : ''
+            }`}
+          >
+            {isTesting ? (
+              <span className="flex items-center gap-2">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Settings className="w-4 h-4" />
+                </motion.div>
+                VERIFYING...
+              </span>
+            ) : "TEST CONNECTION"}
+          </Button>
+          
+          <Button 
+            onClick={saveApiUrl} 
+            className="h-11 bg-primary text-white retro-button glow-pink"
+          >
+            APPLY SETTINGS
+          </Button>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
+
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +132,7 @@ const Navbar = () => {
   const [apiUrl, setApiUrl] = useState(localStorage.getItem("emergency_api_url") || "http://127.0.0.1:5000");
   const [isTesting, setIsTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const testConnection = async () => {
     setIsTesting(true);
@@ -80,90 +188,6 @@ const Navbar = () => {
       description: `Backend target updated to: ${cleanedUrl}`,
     });
   };
-
-  const ApiSettingsDialog = () => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors">
-          <Settings className="w-5 h-5" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] retro-card border-2 border-border bg-card p-0 overflow-hidden">
-        <div className="bg-primary/10 px-6 py-4 border-b-2 border-border flex items-center gap-3">
-          <Globe className="w-5 h-5 text-primary" />
-          <DialogTitle className="font-heading text-lg">Network Settings</DialogTitle>
-        </div>
-        
-        <div className="p-6 space-y-6">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                Backend Endpoint
-              </label>
-              {testStatus === 'success' && (
-                <span className="text-[10px] font-bold text-success flex items-center gap-1 bg-success/10 px-2 py-0.5 rounded-full">
-                  <Check className="w-3 h-3" /> ONLINE
-                </span>
-              )}
-              {testStatus === 'error' && (
-                <span className="text-[10px] font-bold text-destructive flex items-center gap-1 bg-destructive/10 px-2 py-0.5 rounded-full">
-                  <AlertCircle className="w-3 h-3" /> OFFLINE
-                </span>
-              )}
-            </div>
-            
-            <div className="relative group">
-              <Input 
-                value={apiUrl} 
-                onChange={(e) => setApiUrl(e.target.value)}
-                placeholder="https://xxxx.ngrok-free.app"
-                className="retro-input pr-10 h-12 font-mono text-sm"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-                <Globe className="w-4 h-4" />
-              </div>
-            </div>
-            
-            <p className="text-xs text-muted-foreground leading-relaxed italic">
-              Connect to your local AI engine or ngrok tunnel. Do not include <code className="bg-muted px-1 rounded">/analyze</code> at the end.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <Button 
-              onClick={testConnection} 
-              disabled={isTesting}
-              variant="outline"
-              className={`h-11 retro-button border-2 transition-all ${
-                testStatus === 'success' ? 'border-success/50 text-success' : 
-                testStatus === 'error' ? 'border-destructive/50 text-destructive' : ''
-              }`}
-            >
-              {isTesting ? (
-                <span className="flex items-center gap-2">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Settings className="w-4 h-4" />
-                  </motion.div>
-                  VERIFYING...
-                </span>
-              ) : "TEST CONNECTION"}
-            </Button>
-            
-            <Button 
-              onClick={saveApiUrl} 
-              className="h-11 bg-primary text-white retro-button glow-pink"
-            >
-              APPLY SETTINGS
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
 
   const handleLogout = () => {
     logout();
@@ -224,9 +248,26 @@ const Navbar = () => {
           <div className="flex-1 flex items-center justify-end gap-4">
             <div className="hidden md:flex items-center gap-4">
               <ModeToggle />
+              
+              {/* API Settings */}
+              <ApiSettingsDialog 
+                apiUrl={apiUrl}
+                setApiUrl={setApiUrl}
+                isTesting={isTesting}
+                testStatus={testStatus}
+                testConnection={testConnection}
+                saveApiUrl={saveApiUrl}
+                isOpen={isSettingsOpen}
+                setIsOpen={setIsSettingsOpen}
+                trigger={
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors">
+                    <Settings className="w-5 h-5" />
+                  </Button>
+                }
+              />
+
               {isAuthenticated ? (
                 <div className="flex items-center gap-4">
-                  <ApiSettingsDialog />
                   <span className="text-sm text-muted-foreground">
                     Welcome, <span className="text-primary font-medium">{user?.username}</span>
                   </span>
@@ -289,7 +330,21 @@ const Navbar = () => {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between px-2">
                     <span className="text-sm text-muted-foreground">Settings</span>
-                    <ApiSettingsDialog />
+                    <ApiSettingsDialog 
+                      apiUrl={apiUrl}
+                      setApiUrl={setApiUrl}
+                      isTesting={isTesting}
+                      testStatus={testStatus}
+                      testConnection={testConnection}
+                      saveApiUrl={saveApiUrl}
+                      isOpen={isSettingsOpen}
+                      setIsOpen={setIsSettingsOpen}
+                      trigger={
+                        <Button variant="ghost" size="icon" className="text-muted-foreground">
+                          <Settings className="w-5 h-5" />
+                        </Button>
+                      }
+                    />
                   </div>
                   <Button variant="ghost" onClick={handleLogout} className="justify-start">
                     <LogOut className="w-4 h-4 mr-2" />
