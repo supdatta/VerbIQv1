@@ -147,6 +147,24 @@ const AIInterviewer = () => {
   const [lastAnalysis, setLastAnalysis] = useState<AnalysisResult | null>(null);
   const [lastEvaluationTime, setLastEvaluationTime] = useState<string | null>(null);
 
+  const normalizePercent = (val: string | number | undefined, defaultVal: string = "0%") => {
+    if (val === undefined || val === null || val === "") return defaultVal;
+    const strVal = String(val).trim();
+    if (strVal.includes('%')) return strVal;
+    
+    const num = parseFloat(strVal);
+    if (isNaN(num)) return defaultVal;
+    
+    // If it's a small decimal like 0.45, treat as 45%
+    // We include 0 now to handle 0.0 correctly
+    if (num >= 0 && num <= 1 && strVal.length <= 4) {
+      return `${Math.round(num * 100)}%`;
+    }
+    
+    // If it's a number like 85, treat as 85%
+    return `${Math.round(num)}%`;
+  };
+
   const handleAudioResult = (result: AnalysisResult) => {
     setIsRecordingOpen(false);
     setLastAnalysis(result);
@@ -460,6 +478,10 @@ const AIInterviewer = () => {
                     <div className={`text-xl font-black ${
                       lastAnalysis?.grade === 'S' ? 'text-secondary' : 
                       lastAnalysis?.grade === 'A' ? 'text-success' : 
+                      lastAnalysis?.grade === 'B' ? 'text-primary' : 
+                      lastAnalysis?.grade === 'C' ? 'text-accent' : 
+                      lastAnalysis?.grade === 'D' ? 'text-chart-5' : 
+                      lastAnalysis?.grade === 'F' ? 'text-destructive' : 
                       'text-primary'
                     }`}>
                       {lastAnalysis?.grade || '—'}
@@ -500,16 +522,16 @@ const AIInterviewer = () => {
                       </div>
 
                       {/* Performance Metrics */}
-                      <div className="space-y-4">
+                      <div className="space-y-4" key={lastEvaluationTime}>
                         <div className="space-y-2">
                           <div className="flex justify-between text-[10px] font-bold uppercase">
                             <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-yellow-500" /> Confidence</span>
-                            <span className="text-primary">{lastAnalysis.confidence_score.includes('%') ? lastAnalysis.confidence_score : `${lastAnalysis.confidence_score}%`}</span>
+                            <span className="text-primary">{normalizePercent(lastAnalysis.confidence_score)}</span>
                           </div>
                           <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border/50">
                             <motion.div 
                               initial={{ width: 0 }}
-                              animate={{ width: lastAnalysis.confidence_score.includes('%') ? lastAnalysis.confidence_score : `${lastAnalysis.confidence_score}%` }}
+                              animate={{ width: normalizePercent(lastAnalysis.confidence_score) }}
                               className="h-full bg-primary"
                             />
                           </div>
@@ -517,14 +539,26 @@ const AIInterviewer = () => {
 
                         <div className="space-y-2">
                           <div className="flex justify-between text-[10px] font-bold uppercase">
-                            <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-secondary" /> Pause Ratio</span>
-                            <span className="text-secondary">{lastAnalysis.pause_ratio || '0%'}</span>
+                            <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-blue-500" /> Pause Ratio</span>
+                            <span className="text-blue-500 font-black">
+                              {normalizePercent(
+                                lastAnalysis.pause_ratio || 
+                                lastAnalysis.technical_stats?.raw_pause_ratio || 
+                                (lastAnalysis.metrics?.pacing ? lastAnalysis.metrics.pacing / 100 : undefined)
+                              )}
+                            </span>
                           </div>
                           <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border/50">
                             <motion.div 
                               initial={{ width: 0 }}
-                              animate={{ width: lastAnalysis.pause_ratio || '0%' }}
-                              className="h-full bg-secondary"
+                              animate={{ 
+                                width: normalizePercent(
+                                  lastAnalysis.pause_ratio || 
+                                  lastAnalysis.technical_stats?.raw_pause_ratio || 
+                                  (lastAnalysis.metrics?.pacing ? lastAnalysis.metrics.pacing / 100 : undefined)
+                                ) 
+                              }}
+                              className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
                             />
                           </div>
                         </div>
@@ -532,12 +566,12 @@ const AIInterviewer = () => {
                         <div className="space-y-2">
                           <div className="flex justify-between text-[10px] font-bold uppercase">
                             <span className="flex items-center gap-1"><Brain className="w-3 h-3 text-accent" /> Engagement</span>
-                            <span className="text-accent">{lastAnalysis.metrics?.engagement || 75}%</span>
+                            <span className="text-accent">{normalizePercent(lastAnalysis.metrics?.engagement, "75%")}</span>
                           </div>
                           <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border/50">
                             <motion.div 
                               initial={{ width: 0 }}
-                              animate={{ width: `${lastAnalysis.metrics?.engagement || 75}%` }}
+                              animate={{ width: normalizePercent(lastAnalysis.metrics?.engagement, "75%") }}
                               className="h-full bg-accent"
                             />
                           </div>
