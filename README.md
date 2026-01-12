@@ -1,9 +1,9 @@
-🚀 VerbIQ – The LeetCode for Soft Skills
+## 🚀 VerbIQ – The LeetCode for Soft Skills
 AI-powered speech, emotion & confidence analysis using TensorFlow + Gemini
 VerbIQ is an AI backend that analyzes spoken audio and provides data-driven feedback on communication skills—tone, confidence, pauses, and delivery—along with context-aware coaching.
 This repository contains the Google Colab + Flask + Ngrok backend used to expose the API publicly.
 
-🔑 Getting Your ngrok Auth Token (IMPORTANT)
+##🔑 Getting Your ngrok Auth Token (IMPORTANT)
 
 VerbIQ uses ngrok to expose the Flask server publicly.
 You must set an ngrok auth token, or the server will not work.
@@ -14,12 +14,12 @@ You must set an ngrok auth token, or the server will not work.
 
 1. Open the link above
 2. Sign in with your Google account
-3. If prompted, grant permissions to access ngrok
+3. If prompted, ask permissions to access ngrok
 4. Run the cells shown in the notebook
 5. Copy your ngrok auth token
 6. Paste it into the settings icon and test for connection!!
 
-🧠 What This Backend Does
+##🧠 What This Backend Does
 🎙️ Accepts audio recordings via REST API
 📊 Extracts ML-based speech features (MFCCs, pacing, pauses)
 🤖 Runs a TensorFlow emotion/confidence model
@@ -27,7 +27,7 @@ You must set an ngrok auth token, or the server will not work.
 📦 Returns structured JSON output
 🌐 Exposes API publicly using ngrok
 
-🛠️ Tech Stack
+## 🛠️ Tech Stack
 Python
 TensorFlow / Keras
 Librosa
@@ -55,7 +55,7 @@ Steps:
 
 Gemini is only invoked when model confidence is low, not for every request.
 
-📡 API Usage
+## 📡 API Usage
 Endpoint
 POST /analyze
 
@@ -63,13 +63,13 @@ Form Data
 file: audio file (.wav, .mp3, .webm)
 context: Interview Prep | Group Discussion | Debate
 
-⚠️ Common Issues
+## ⚠️ Common Issues
 404 on ngrok URL → Use /analyze, not /
 Model shape mismatch → Delete old .keras file and retrain
 No audio files detected → Check dataset path after extraction
 Gemini errors → Invalid key or quota exceeded
 
-📈 Why VerbIQ Is Different
+## 📈 Why VerbIQ Is Different
 ML-first (TensorFlow), not prompt-first
 Gemini used strategically, not blindly
 Real metrics, not generic advice
@@ -82,7 +82,7 @@ Longitudinal progress tracking
 On-device inference
 SaaS dashboard
 
-🧠 Final Word
+## 🧠 Final Word
 VerbIQ isn’t another “AI feedback tool.”
 It’s structured practice for real-world communication—measured, repeatable, and brutally honest.
 
