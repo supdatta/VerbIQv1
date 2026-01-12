@@ -3,7 +3,7 @@ AI-powered speech, emotion & confidence analysis using TensorFlow + Gemini
 VerbIQ is an AI backend that analyzes spoken audio and provides data-driven feedback on communication skills—tone, confidence, pauses, and delivery—along with context-aware coaching.
 This repository contains the Google Colab + Flask + Ngrok backend used to expose the API publicly.
 
-##🔑 Getting Your ngrok Auth Token (IMPORTANT)
+🔑 Getting Your ngrok Auth Token (IMPORTANT)
 
 VerbIQ uses ngrok to expose the Flask server publicly.
 You must set an ngrok auth token, or the server will not work.
