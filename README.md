@@ -34,7 +34,7 @@ Librosa
 Flask + Flask-CORS
 Gemini API
 ngrok
-Google Colab
+Google Colab.
 
 📁 Dataset Structure (Required)
 Your dataset must follow this structure (RAVDESS-style):
