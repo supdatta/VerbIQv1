@@ -45,12 +45,10 @@ archive.zip
     │   ├── 03-01-02-01-01-01-01.wav
     ├── Actor_02/
     ├── ...
-Steps:
 
 
 
-
-⚠️ If you see a permissions popup — allow it. That’s normal.
+⚠️ If you see a permissions popup allow it. That’s normal.
 
 
 Gemini is only invoked when model confidence is low, not for every request.
